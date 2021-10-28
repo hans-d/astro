@@ -3,6 +3,7 @@ import type { AstroConfig, ComponentInstance, GetStaticPathsResult, ManifestData
 import type { LogOptions } from '../logger';
 
 import { rollupPluginHTML } from '@web/rollup-plugin-html';
+import { rollupPluginAstroBuild } from '../../vite-plugin-build/index.js';
 import fs from 'fs';
 import { bold, cyan, green, dim } from 'kleur/colors';
 import { performance } from 'perf_hooks';
@@ -128,7 +129,7 @@ class AstroBuilder {
     // Bundle the assets in your final build: This currently takes the HTML output
     // of every page (stored in memory) and bundles the assets pointed to on those pages. 
     timer.buildStart = performance.now();
-    await vite.build({
+    let buildRes = await vite.build({
       logLevel: 'error',
       mode: 'production',
       build: {
@@ -142,6 +143,7 @@ class AstroBuilder {
         target: 'es2020', // must match an esbuild target
       },
       plugins: [
+        rollupPluginAstroBuild({ astroConfig: this.config, inputs: input }),
         rollupPluginHTML({ input, extractAssets: false }) as any, // "any" needed for CI; also we don’t need typedefs for this anyway
         ...(viteConfig.plugins || []),
       ],
